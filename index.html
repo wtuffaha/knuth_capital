@@ -59,7 +59,13 @@
 
       <section id="contact" aria-labelledby="contact-title">
         <div class="cta-strip">
-          <p><strong>Want to get in touch?</strong> Send us an email at <a href="mailto:hello@knuthcapital.com" target="_blank">hello@knuthcapital.com</a>.</p>
+          <p><strong>Want to get in touch?</strong> Send us an email at <a id="contact-link" target="_blank"></a>.</p>
+          <script>
+            const e = "hello" + "@" + "knuthcapital.com";
+            const el = document.getElementById("contact-link");
+            el.href = "mailto:" + e;
+            el.textContent = e;
+          </script>
         </div>
       </section>
 
