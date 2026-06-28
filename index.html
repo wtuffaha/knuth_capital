@@ -40,15 +40,17 @@
       form { display:grid; grid-template-columns: 1fr auto; gap: 10px; }
       input[type="email"] { width:100%; padding: 12px 14px; border-radius: 12px; border:1px solid rgba(255,255,255,.16); background: #0d1016; color: var(--text); }
       .subtle { font-size: 12px; color: var(--muted); margin-top: 6px; }
+      #myCanvas { display:block; margin: auto; }
+      .logo { font-weight: bold; }
     </style>
   </head>
   <body>
     <main class="container">
       <section class="hero" aria-labelledby="hero-title">
-		  <a href="#features"></a><img src="https://i.postimg.cc/XBgbXxgF/KC-Logo-Transparent.png" alt="Knuth Capital" width="125" height="125">
-        <!-- <span class="badge">Public companies are still companies owned by the shareholders</span> -->
+        <canvas id="myCanvas" width="120" height="120" aria-label="Knuth Capital"></canvas>
+        <div class="logo"><span style="font-size: 20px; letter-spacing: 3px; line-height: 0px; display: block; padding-bottom: 5px; padding-top: 5px;">KNUTH</span><span style="font-size: 12px; letter-spacing: 3px; line-height: 0px; padding:0px;">CAPITAL</span></div>
         <h1 id="hero-title">Skin in the game aligns incentives.</h1>
-        <p class="lead">Knuth Capital is owned by former shareholders and current operators of <a href="https://www.jawaker.com/en" target="_blank">Jawaker</a>.<br>Knuth Capital is an active investor in <a href="https://www.stillfront.com/en/" target="_blank">Stillfront Group</a>.</p>
+        <p class="lead">Knuth Capital is owned by former shareholders and current operators of <a href="https://www.jawaker.com/en" target="_blank">Jawaker</a>.<br /><br />Knuth Capital is an active investor in <a href="https://www.stillfront.com/en/" target="_blank">Stillfront Group</a>.</p>
         <div class="logo-bullets" aria-label="Quick highlights">
           <span>Total Stillfront shares owned by Knuth Capital: <b>59,048,221</b></span><span>Percentage of Stillfront owned by Knuth Capital: <b>11.40%</b></span>
         </div>
@@ -69,5 +71,119 @@
     <script>
       document.getElementById('year').textContent = new Date().getFullYear();
     </script>
+
+  <script>
+    function smallCircle(ctx, cx, cy, cr, fill = "#FFFFFF") {
+      ctx.beginPath();
+      ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+      ctx.fillStyle = fill;
+      ctx.fill();
+    }
+
+    function drawLine(ctx, x1, y1, x2, y2, t = 1) {
+      const x = x1 + (x2 - x1) * t;
+      const y = y1 + (y2 - y1) * t;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.stroke();
+    }
+
+    function drawCircleStroke(ctx, cx, cy, R, t = 1) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, -Math.PI/2, -Math.PI/2 + t * Math.PI * 2); // start at top
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.stroke();
+    }
+
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function drawLogo(params) {
+      const {
+        R = 50,
+        offsetX = R * 0.08,
+        cx = 60,
+        cy = 60,
+        lineWidth = R * 0.07,
+        reveal = 0,
+        nodeScale = 10,
+        wobbleDeg = 90
+      } = params;
+
+      const r = R * 0.10;
+      const d1 = R * 0.75;
+      const d2 = R * 0.55;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate((wobbleDeg * Math.PI) / 180);
+      ctx.translate(-cx, -cy);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = lineWidth;
+
+      drawCircleStroke(ctx, cx, cy, R, reveal);
+
+      const c1 = [cx - offsetX, cy];
+
+      // 45° below right
+      const c2 = [c1[0] + d1 * Math.cos(Math.PI/4), c1[1] + d1 * Math.sin(Math.PI/4)];
+      // 45° above right
+      const c3 = [c1[0] + d1 * Math.cos(Math.PI/4), c1[1] - d1 * Math.sin(Math.PI/4)];
+      // 45° above left
+      const c4 = [c1[0] - d2 * Math.cos(Math.PI/4), c1[1] - d2 * Math.sin(Math.PI/4)];
+
+      drawLine(ctx, c1[0], c1[1], c2[0], c2[1], reveal);
+      drawLine(ctx, c1[0], c1[1], c3[0], c3[1], reveal);
+      drawLine(ctx, c2[0], c2[1], c3[0], c3[1], reveal);
+      drawLine(ctx, c1[0], c1[1], c4[0], c4[1], reveal);
+      drawLine(ctx, c2[0], c2[1], c2[0] - R, c2[1], reveal);
+      drawLine(ctx, c4[0], c4[1], c4[0], c2[1], reveal);
+
+      smallCircle(ctx, c1[0], c1[1], r * nodeScale);
+      smallCircle(ctx, c2[0], c2[1], r * nodeScale);
+      smallCircle(ctx, c3[0], c3[1], r * nodeScale);
+      smallCircle(ctx, c4[0], c4[1], r * nodeScale);
+
+      ctx.restore();
+    }
+
+    let start = performance.now();
+    function tick(now) {
+      const t = (now - start) / 1000;
+
+      // Reveal: ease-out over first 1.2s, then hold at 1
+      const d = Math.min(1, t / 1.2);
+      const reveal = 1 - Math.pow(1 - d, 3);
+
+      const nodeScale = Math.max(0.9, Math.min(1.15,
+        1.025 + Math.sin(t * 2 * Math.PI * 0.5) * 0.125
+      ));
+
+      ctx.shadowColor = "rgba(0,0,0,0.25)";
+      ctx.shadowBlur = 10 + 6 * (Math.sin(t * 2 * Math.PI * 0.5) + 1) * 0.5;
+
+      drawLogo({ reveal, nodeScale, wobbleDeg: 0 });
+
+      requestAnimationFrame(tick);
+    }
+
+    // Hi-DPI: scale backing store for crisp lines
+    (function setupHiDPI() {
+      const ratio = window.devicePixelRatio || 1;
+      if (ratio === 1) return;
+      const w = canvas.width;
+      const h = canvas.height;
+      canvas.width = w * ratio;
+      canvas.height = h * ratio;
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.scale(ratio, ratio);
+    })();
+
+    requestAnimationFrame(tick);
+  </script>
   </body>
 </html>
